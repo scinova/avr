@@ -12,7 +12,7 @@ void adc_set_2v56_reference();
 #endif
 void adc_enable();
 void adc_disable();
-void adc_read(uint8_t channel, uint16_t *val);
+void adc_read(uint8_t channel, uint16_t * volatile val);
 bool adc_ready();
 
 #endif

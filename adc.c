@@ -6,7 +6,7 @@
 #define bit(x) _BV(x)
 
 static uint8_t adc_channel;
-static uint16_t *adc_value;
+uint16_t * volatile adc_value;
 
 void adc_set_aref_reference() {
 	ADMUX = 0;
@@ -28,7 +28,7 @@ void adc_set_1v1_reference() {
 #if defined (__AVR_ATtiny85__) || defined (__AVR_ATmega2560__)
 void adc_set_2v56_reference() {
 #if defined (__AVR_ATtiny85__)
-	ADMUX &= ~(bit(REFS0) | bit(REFS2);
+	ADMUX &= ~(bit(REFS0) | bit(REFS2));
 #else
 	ADMUX &= ~bit(REFS0);
 #endif
@@ -48,7 +48,7 @@ void adc_disable(void) {
 	ADMUX = 0;
 }
 
-void adc_read(uint8_t channel, uint16_t *value) {
+void adc_read(uint8_t channel, uint16_t * volatile value) {
 	adc_channel = channel;
 	adc_value = value;
 	ADMUX = (ADMUX & 0xF0) | channel;
