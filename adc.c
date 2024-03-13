@@ -27,11 +27,12 @@ void adc_set_1v1_reference() {
 
 #if defined (__AVR_ATtiny85__) || defined (__AVR_ATmega2560__)
 void adc_set_2v56_reference() {
-	cbi(ADMUX, REFS0);
-	sbi(ADMUX, REFS1);
 #if defined (__AVR_ATtiny85__)
-	sbi(ADMUX, REFS2);
+	ADMUX &= ~(bit(REFS0) | bit(REFS2);
+#else
+	ADMUX &= ~bit(REFS0);
 #endif
+	ADMUX |= bit(REFS1);
 }
 #endif
 
