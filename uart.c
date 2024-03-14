@@ -57,7 +57,7 @@ void uart_write(uint8_t * data, uint8_t len) {
 }
 
 void uart_print(uint8_t * data) {
-	uart_write(data, strlen(data));
+	uart_write(data, strlen((char *)data));
 }
 
 #if defined (__AVR_ATmega2560__)
