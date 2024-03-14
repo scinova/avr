@@ -6,10 +6,6 @@
 #define TX_QUEUE_SIZE 20
 #define RX_QUEUE_SIZE 20
 
-#define bit(x) ((uint8_t) 1U << (x))
-#define cbi(sfr, b) (_SFR_BYTE(sfr) &= ~bit(b))
-#define sbi(sfr, b) (_SFR_BYTE(sfr) |= bit(b))
-
 typedef struct {
 	uint8_t address;
 	bool write;
@@ -31,8 +27,8 @@ static bool _busy;
 void i2c_enable(uint32_t bitrate) {
 	TWSR = 0; // no prescaler
 	TWBR = ((F_CPU / bitrate) - 16) / 2;
-	TWCR |= bit(TWEN); // enable twi
-	TWCR |= bit(TWIE); // enable interrupt
+	TWCR |= _BV(TWEN); // enable twi
+	TWCR |= _BV(TWIE); // enable interrupt
 }
 
 void i2c_disable() {
@@ -70,9 +66,9 @@ ISR (TWI_vect) {
 
 		case 0x08: // start sent
 		case 0x10: // repeated start sent
-			cbi(TWCR, TWSTA);
+			TWCR &= ~_BV(TWSTA);
 			TWDR = (action.address << 1) | action.write;
-			sbi(TWCR, TWINT);
+			TWCR |= _BV(TWINT);
 			break;
 
 		case 0x18: // sla+w sent, ack received
@@ -85,7 +81,7 @@ ISR (TWI_vect) {
 			TWDR = tx_queue[tx_tail];
 			tx_tail = next;
 			action.done++;
-			sbi(TWCR, TWINT);
+			TWCR |= _BV(TWINT);
 			break;
 
 		case 0x40: // sla+r sent, ack received
@@ -95,7 +91,7 @@ ISR (TWI_vect) {
 				break;
 			}
 			action.dest[action.done++] = TWDR;
-			sbi(TWCR, TWINT);
+			TWCR |= _BV(TWINT);
 			break;
 
 		case 0: // illegal start/stop
@@ -107,8 +103,8 @@ ISR (TWI_vect) {
 		case 0x58: // byte received, nack sent, end of transmission
 		case 0x38: // arbitration lost
 			_busy = false;
-			sbi(TWCR, TWSTO);
-			sbi(TWCR, TWINT);
+			TWCR |= _BV(TWSTO);
+			TWCR |= _BV(TWINT);
 			break;
 	}
 }
