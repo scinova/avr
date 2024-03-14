@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #if !defined(ADC_QUEUE_LENGTH)
-	#define ADC_QUEUE_LENGTH 1
+	#define ADC_QUEUE_LENGTH 20
 #endif
 
 typedef struct {

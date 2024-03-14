@@ -53,7 +53,7 @@ void _start_next_conversion() {
 }
 
 adc_conversion_t * adc_convert(uint8_t channel) {
-	uint8_t next = (_adc_queue_head < ADC_QUEUE_LENGTH - 1 ? _adc_queue_head + 1 : 0);
+	uint8_t next = (_adc_queue_head < ADC_QUEUE_LENGTH ? _adc_queue_head + 1 : 0);
 	if (next == _adc_queue_tail)
 		return NULL;
 	adc_conversion_t * conversion = &_adc_queue[_adc_queue_head];
@@ -71,11 +71,10 @@ ISR(ADC_vect) {
 	adc_conversion_t * conversion = &_adc_queue[_adc_queue_tail];
 	conversion->value = ADCW;
 	conversion->completed = true;
-	uint8_t next = (_adc_queue_tail < ADC_QUEUE_LENGTH - 1 ? _adc_queue_tail + 1 : 0);
+	uint8_t next = (_adc_queue_tail < ADC_QUEUE_LENGTH ? _adc_queue_tail + 1 : 0);
 	_adc_queue_tail = next;
-	if (_adc_queue_head == _adc_queue_tail) {
+	if (_adc_queue_head == _adc_queue_tail)
 		ADCSRA &= ~_BV(ADIE);
-		return;
-	}
-	_start_next_conversion();
+	else
+		_start_next_conversion();
 }
