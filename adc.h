@@ -4,6 +4,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#if !defined(ADC_QUEUE_LENGTH)
+	#define ADC_QUEUE_LENGTH 1
+#endif
+
+typedef struct {
+	uint8_t channel;
+	volatile bool completed;
+	volatile uint16_t value;
+} adc_conversion_t;
+
 void adc_set_aref_reference();
 void adc_set_vcc_reference();
 void adc_set_1v1_reference();
@@ -12,7 +22,6 @@ void adc_set_2v56_reference();
 #endif
 void adc_enable();
 void adc_disable();
-void adc_read(uint8_t channel, uint16_t * volatile val);
-bool adc_ready();
+adc_conversion_t * adc_convert(uint8_t channel);
 
 #endif
