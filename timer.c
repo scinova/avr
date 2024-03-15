@@ -37,3 +37,22 @@ void timer_disable() {
 	TIMSK0 &= ~_BV(TOIE0);
 #endif
 }
+
+void enable_pwm_a(){
+	TCCR0A |= _BV(COM0A1);
+}
+void enable_pwm_b() {
+	TCCR0A |= _BV(COM0B1);
+}
+void output_pwm_a(uint8_t value) {
+	OCR0A = value;
+}
+void output_pwm_b(uint8_t value) {
+	OCR0B = value;
+}
+void disable_pwm_a() {
+	TCCR0A &= ~(_BV(COM0A0) | _BV(COM0A1));
+}
+void disable_pwm_b() {
+	TCCR0A &= ~(_BV(COM0B0) | _BV(COM0B1));
+}
