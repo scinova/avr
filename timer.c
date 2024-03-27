@@ -56,3 +56,8 @@ void disable_pwm_a() {
 void disable_pwm_b() {
 	TCCR0A &= ~(_BV(COM0B0) | _BV(COM0B1));
 }
+
+void delay_ms(uint32_t ms) {
+	uint32_t until = timer_ms() + ms;
+	while (timer_ms() < until);
+}

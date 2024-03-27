@@ -4,6 +4,7 @@ void timer_enable();
 void timer_disable();
 uint64_t timer_us();
 uint32_t timer_ms();
+void delay_ms();
 
 void enable_pwm_a();
 void enable_pwm_b();
