@@ -4,14 +4,33 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void i2c_enable(uint32_t speed);
-void i2c_disable();
+typedef void (* callback_t) (void);
 
-void i2c_write_register(uint8_t address, uint8_t reg, uint8_t value);
-void i2c_read_register(uint8_t address, uint8_t reg, uint8_t *value);
+typedef struct {
+	uint8_t address;
+	bool write;
+	uint8_t len;
+	volatile uint8_t *dest;
+	uint8_t done;
+	callback_t callback;
+	bool completed;
+} i2c_action_t;
+typedef i2c_action_t i2c_txn_t;
 
-void i2c_write(uint8_t address, uint8_t *data, uint8_t len);
-void i2c_read(uint8_t address, uint8_t *data, uint8_t len);
-//void i2c_init(uint32_t bitrate);
+void i2c_init(uint32_t bitrate);
+
+volatile i2c_txn_t * i2c_write(uint8_t address, uint8_t * data, uint8_t len);
+volatile i2c_txn_t * i2c_write_cb(uint8_t address, uint8_t * data, uint8_t len, callback_t cb);
+
+volatile i2c_txn_t * i2c_read(uint8_t address, volatile uint8_t * data, uint8_t len);
+volatile i2c_txn_t * i2c_read_cb(uint8_t address, volatile uint8_t * data, uint8_t len, callback_t cb);
+
+volatile i2c_txn_t * i2c_write_register(uint8_t address, uint8_t reg, uint8_t value);
+volatile i2c_txn_t * i2c_read_register(uint8_t address, uint8_t reg, volatile uint8_t * value);
+volatile i2c_txn_t * i2c_read_register_cb(uint8_t address, uint8_t reg, volatile uint8_t * value, callback_t cb);
+
+bool i2c_is_ready();
+volatile i2c_txn_t * i2c_read_registers(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value);
+volatile i2c_txn_t * i2c_read_registers_cb(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value, callback_t cb);
 
 #endif

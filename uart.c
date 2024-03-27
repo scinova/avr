@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdbool.h>
 #include "uart.h"
 
 static uint8_t tx_buffer[UART_TX_BUFFER_SIZE + 1];

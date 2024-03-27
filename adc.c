@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "adc.h"
 
-static adc_conversion_t _adc_queue[ADC_QUEUE_LENGTH + 1];
+static volatile adc_conversion_t _adc_queue[ADC_QUEUE_LENGTH + 1];
 static volatile uint8_t _adc_queue_head;
 static volatile uint8_t _adc_queue_tail;
 
@@ -47,29 +47,30 @@ void adc_disable(void) {
 }
 
 void _start_next_conversion() {
-	adc_conversion_t * conversion = &_adc_queue[_adc_queue_tail];
+	volatile adc_conversion_t * conversion = &_adc_queue[_adc_queue_tail];
 	ADMUX = (ADMUX & 0xF0) | conversion->channel;
 	ADCSRA |= _BV(ADSC);
 }
 
-adc_conversion_t * adc_convert(uint8_t channel) {
+void adc_convert(uint8_t channel, uint16_t * value) {
 	uint8_t next = (_adc_queue_head < ADC_QUEUE_LENGTH ? _adc_queue_head + 1 : 0);
 	if (next == _adc_queue_tail)
-		return NULL;
-	adc_conversion_t * conversion = &_adc_queue[_adc_queue_head];
+		return;
+	volatile adc_conversion_t * conversion = &_adc_queue[_adc_queue_head];
 	conversion->channel = channel;
+	conversion->value = value;
 	bool queue_was_empty = (_adc_queue_head == _adc_queue_tail);
 	_adc_queue_head = next;
 	if (queue_was_empty) {
 		ADCSRA |= _BV(ADIE);
 		_start_next_conversion();
 	}
-	return conversion;
+	//return conversion;
 }
 
 ISR(ADC_vect) {
-	adc_conversion_t * conversion = &_adc_queue[_adc_queue_tail];
-	conversion->value = ADCW;
+	volatile adc_conversion_t * conversion = &_adc_queue[_adc_queue_tail];
+	*conversion->value = ADCW;
 	conversion->completed = true;
 	uint8_t next = (_adc_queue_tail < ADC_QUEUE_LENGTH ? _adc_queue_tail + 1 : 0);
 	_adc_queue_tail = next;
