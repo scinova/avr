@@ -23,6 +23,10 @@ typedef enum {
 	adcReference2V26 = 3
 } adc_reference_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void adc_set_aref_reference();
 void adc_set_vcc_reference();
 void adc_set_1v1_reference();
@@ -35,4 +39,7 @@ void adc_disable();
 
 void adc_convert(uint8_t channel, uint16_t * valueptr);
 void adc_convert_cb(uint8_t channel, uint16_t * valueptr, callback_t callback);
+#ifdef __cplusplus
+}
+#endif
 #endif

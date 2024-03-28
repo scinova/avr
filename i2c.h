@@ -23,6 +23,9 @@ typedef struct {
 	bool completed;
 } i2c_txn_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void i2c_enable(uint32_t bitrate);
 bool i2c_is_ready();
 
@@ -41,5 +44,7 @@ volatile i2c_txn_t * i2c_read_registers_cb(uint8_t address, uint8_t reg, uint8_t
 
 void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -11,6 +11,9 @@
 #define UART_RX_BUFFER_SIZE 50
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void uart_enable(uint32_t bitrate);
 void uart_enable_tx_only(uint32_t bitrate);
 void uart_enable_rx_only(uint32_t bitrate);
@@ -22,5 +25,7 @@ void uart_print(uint8_t * str);
 
 bool uart_data_is_available();
 uint8_t uart_read();
-
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -64,7 +64,9 @@ typedef enum {
 	mpu6050PLLExternal_19MHz = 5,
 	mpu6050ClockStopped = 7
 } mpu6050_clock_source_t;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 void mpu6050_init();
 void mpu6050_reset();
 void mpu6050_set_sample_rate_divider (uint8_t val);
@@ -79,5 +81,7 @@ void mpu6050_disable();
 void mpu6050_read_acceleration(volatile int16_t * values);
 void mpu6050_read_angular_velocity(volatile int16_t * values);
 void mpu6050_read_temperature(volatile float * dest);
-
+#ifdef __cplusplus
+}
+#endif
 #endif
