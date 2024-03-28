@@ -42,8 +42,10 @@ volatile i2c_txn_t * i2c_write_registers(uint8_t address, uint8_t reg, uint8_t l
 volatile i2c_txn_t * i2c_read_registers(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value);
 volatile i2c_txn_t * i2c_read_registers_cb(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value, callback_t cb);
 
-void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
+bool i2c_read_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
+void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
+void i2c_set_register_bits(uint8_t address, uint8_t reg, uint8_t bits, uint8_t mask);
 #ifdef __cplusplus
 }
 #endif

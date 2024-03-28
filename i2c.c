@@ -203,3 +203,18 @@ void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit) {
 	i2c_write_register(address, reg, *txn->data & ~(1 << bit));
 	while (!txn->completed);
 }
+
+bool i2c_read_register_bit(uint8_t address, uint8_t reg, uint8_t bit) {
+	volatile uint8_t buf;
+	volatile i2c_txn_t * txn = i2c_read_register(address, reg, &buf);
+	while (!txn->completed);
+	return *txn->data & (1 << bit);
+}
+
+void i2c_set_register_bits(uint8_t address, uint8_t reg, uint8_t bits, uint8_t mask) {
+	volatile uint8_t buf;
+	volatile i2c_txn_t * txn = i2c_read_register(address, reg, &buf);
+	while (!txn->completed);
+	i2c_write_register(address, reg, (*txn->data & ~mask) | (bits & mask));
+	while (!txn->completed);
+}
