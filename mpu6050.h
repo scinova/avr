@@ -65,6 +65,7 @@ typedef enum {
 	mpu6050ClockStopped = 7
 } mpu6050_clock_source_t;
 
+void mpu6050_init();
 void mpu6050_reset();
 void mpu6050_set_sample_rate_divider (uint8_t val);
 void mpu6050_set_config (mpu6050_lpf_bandwith_t bandwith, mpu6050_fsync_t fsync);
