@@ -4,6 +4,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifndef I2C_TXN_BUFFER_SIZE
+#define I2C_TXN_BUFFER_SIZE 10
+#endif
+#ifndef I2C_TX_BUFFER_SIZE
+#define I2C_TX_BUFFER_SIZE 10
+#endif
+
 typedef void (* callback_t) (void);
 
 typedef struct {
@@ -14,8 +21,7 @@ typedef struct {
 	uint8_t processed;
 	callback_t callback;
 	bool completed;
-} i2c_action_t;
-typedef i2c_action_t i2c_txn_t;
+} i2c_txn_t;
 
 void i2c_enable(uint32_t bitrate);
 bool i2c_is_ready();

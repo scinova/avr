@@ -3,14 +3,11 @@
 #include "i2c.h"
 #include <stddef.h>
 
-#define ACTIONS_QUEUE_SIZE 40
-#define TX_BUFFER_SIZE 40
+static volatile i2c_txn_t txns[I2C_TXN_BUFFER_SIZE + 1];
+static volatile uint8_t txns_head = 0;
+static volatile uint8_t txns_tail = 0;
 
-static volatile i2c_action_t actions[ACTIONS_QUEUE_SIZE + 1];
-static volatile uint8_t actions_head = 0;
-static volatile uint8_t actions_tail = 0;
-
-static volatile uint8_t tx_buffer[TX_BUFFER_SIZE + 1];
+static volatile uint8_t tx_buffer[I2C_TX_BUFFER_SIZE + 1];
 static volatile uint8_t tx_head = 0;
 static volatile uint8_t tx_tail = 0;
 
@@ -24,7 +21,7 @@ void i2c_disable() {
 }
 
 bool i2c_is_ready() {
-	return (actions_head == actions_tail);
+	return (txns_head == txns_tail);
 }
 
 void i2c_send_start() {
@@ -32,22 +29,22 @@ void i2c_send_start() {
 }
 
 volatile i2c_txn_t * _i2c_write(uint8_t address, uint8_t *data, uint8_t len, callback_t cb) {
-	volatile i2c_txn_t * action = &actions[actions_head];
-	action->address = address;
-	action->callback = cb;
-	action->write = true;
-	action->len = len;
-	action->processed = 0;
-	action->completed = false;
-	for (int i = 0; i < action->len; i++) {
+	volatile i2c_txn_t * txn = &txns[txns_head];
+	txn->address = address;
+	txn->callback = cb;
+	txn->write = true;
+	txn->len = len;
+	txn->processed = 0;
+	txn->completed = false;
+	for (int i = 0; i < txn->len; i++) {
 		tx_buffer[tx_head] = data[i];
-		tx_head = (tx_head < TX_BUFFER_SIZE ? tx_head + 1 : 0);
+		tx_head = (tx_head < I2C_TX_BUFFER_SIZE ? tx_head + 1 : 0);
 	}
-	bool was_empty = (actions_head == actions_tail);
-	actions_head = (actions_head < ACTIONS_QUEUE_SIZE ? actions_head + 1 : 0);
+	bool was_empty = (txns_head == txns_tail);
+	txns_head = (txns_head < I2C_TXN_BUFFER_SIZE ? txns_head + 1 : 0);
 	if (was_empty)
 		i2c_send_start();
-	return action;
+	return txn;
 }
 
 volatile i2c_txn_t * i2c_write(uint8_t address, uint8_t * data, uint8_t len) {
@@ -59,19 +56,19 @@ volatile i2c_txn_t * i2c_write_cb(uint8_t address, uint8_t * data, uint8_t len, 
 }
 
 volatile i2c_txn_t * _i2c_read(uint8_t address, volatile uint8_t * data, uint8_t len, callback_t cb) {
-	volatile i2c_action_t * action = &actions[actions_head];
-	action->callback = cb;
-	action->address = address;
-	action->write = false;
-	action->len = len;
-	action->processed = 0;
-	action->data = data;
-	action->completed = false;
-	bool was_empty = (actions_head == actions_tail);
-	actions_head = (actions_head < ACTIONS_QUEUE_SIZE ? actions_head + 1 : 0);
+	volatile i2c_txn_t * txn = &txns[txns_head];
+	txn->callback = cb;
+	txn->address = address;
+	txn->write = false;
+	txn->len = len;
+	txn->processed = 0;
+	txn->data = data;
+	txn->completed = false;
+	bool was_empty = (txns_head == txns_tail);
+	txns_head = (txns_head < I2C_TXN_BUFFER_SIZE ? txns_head + 1 : 0);
 	if (was_empty)
 		i2c_send_start();
-	return action;
+	return txn;
 }
 
 volatile i2c_txn_t * i2c_read(uint8_t address, volatile uint8_t * data, uint8_t len) {
@@ -82,20 +79,20 @@ volatile i2c_txn_t * i2c_read_cb(uint8_t address, volatile uint8_t * data, uint8
 	return _i2c_read(address, data, len, cb);
 }
 
-void next_action() {
-	actions_tail = (actions_tail < ACTIONS_QUEUE_SIZE ? actions_tail + 1 : 0);
-	if (actions_head != actions_tail)
+void next_txn() {
+	txns_tail = (txns_tail < I2C_TXN_BUFFER_SIZE ? txns_tail + 1 : 0);
+	if (txns_head != txns_tail)
 		TWCR = _BV(TWEN) | _BV(TWSTA) | _BV(TWIE) | _BV(TWINT);
 	else
 		TWCR = 0;//_BV(TWEN) | _BV(TWSTO) | _BV(TWIE) | _BV(TWINT);
 }
 
 ISR (TWI_vect) {
-	volatile i2c_action_t * action = &(actions[actions_tail]);
+	volatile i2c_txn_t * txn = &(txns[txns_tail]);
 	switch (TWSR & 0b11111000) {
 		case 0x08: // 8 start sent
 		case 0x10: // 16 repeated start sent
-			TWDR = (action->address << 1) | !action->write;
+			TWDR = (txn->address << 1) | !txn->write;
 			TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
 			break;
 
@@ -105,13 +102,13 @@ ISR (TWI_vect) {
 			break;
 
 		case 0x28: // byte sent, ack received
-			tx_tail = (tx_tail < TX_BUFFER_SIZE ? tx_tail + 1 : 0);
-			action->processed++;
-			if (action->processed == action->len) {
-				if (action->callback != 0)
-					action->callback();
-				action->completed = true;
-				next_action();
+			tx_tail = (tx_tail < I2C_TX_BUFFER_SIZE ? tx_tail + 1 : 0);
+			txn->processed++;
+			if (txn->processed == txn->len) {
+				if (txn->callback != 0)
+					txn->callback();
+				txn->completed = true;
+				next_txn();
 				break;
 			}
 			TWDR = tx_buffer[tx_tail];
@@ -123,21 +120,21 @@ ISR (TWI_vect) {
 			break;
 
 		case 0x50: // data received, ack returned
-			action->data[action->processed] = TWDR;
-			action->processed++;
-			if (action->processed < action->len)
+			txn->data[txn->processed] = TWDR;
+			txn->processed++;
+			if (txn->processed < txn->len)
 				TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT) | _BV(TWEA);
 			else
 				TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
 			break;
 
 		case 0x58: // byte received, nack sent, end of transmission
-			action->data[action->processed] = TWDR;
-			action->processed++;
-			if (action->callback != 0)
-				action->callback();
-			action->completed = true;
-			next_action();
+			txn->data[txn->processed] = TWDR;
+			txn->processed++;
+			if (txn->callback != 0)
+				txn->callback();
+			txn->completed = true;
+			next_txn();
 			break;
 
 		case 0: // illegal start/stop
