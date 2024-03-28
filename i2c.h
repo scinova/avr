@@ -10,14 +10,14 @@ typedef struct {
 	uint8_t address;
 	bool write;
 	uint8_t len;
-	volatile uint8_t *dest;
-	uint8_t done;
+	volatile uint8_t * data;
+	uint8_t processed;
 	callback_t callback;
 	bool completed;
 } i2c_action_t;
 typedef i2c_action_t i2c_txn_t;
 
-void i2c_init(uint32_t bitrate);
+void i2c_enable(uint32_t bitrate);
 bool i2c_is_ready();
 
 volatile i2c_txn_t * i2c_write(uint8_t address, uint8_t * data, uint8_t len);
@@ -32,5 +32,8 @@ volatile i2c_txn_t * i2c_read_register_cb(uint8_t address, uint8_t reg, volatile
 volatile i2c_txn_t * i2c_write_registers(uint8_t address, uint8_t reg, uint8_t len, uint8_t * value);
 volatile i2c_txn_t * i2c_read_registers(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value);
 volatile i2c_txn_t * i2c_read_registers_cb(uint8_t address, uint8_t reg, uint8_t len, volatile uint8_t * value, callback_t cb);
+
+void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
+void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 
 #endif

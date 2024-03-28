@@ -37,7 +37,7 @@ volatile i2c_txn_t * _i2c_write(uint8_t address, uint8_t *data, uint8_t len, cal
 	action->callback = cb;
 	action->write = true;
 	action->len = len;
-	action->done = 0;
+	action->processed = 0;
 	action->completed = false;
 	for (int i = 0; i < action->len; i++) {
 		tx_buffer[tx_head] = data[i];
@@ -64,8 +64,8 @@ volatile i2c_txn_t * _i2c_read(uint8_t address, volatile uint8_t * data, uint8_t
 	action->address = address;
 	action->write = false;
 	action->len = len;
-	action->done = 0;
-	action->dest = data;
+	action->processed = 0;
+	action->data = data;
 	action->completed = false;
 	bool was_empty = (actions_head == actions_tail);
 	actions_head = (actions_head < ACTIONS_QUEUE_SIZE ? actions_head + 1 : 0);
@@ -106,8 +106,8 @@ ISR (TWI_vect) {
 
 		case 0x28: // byte sent, ack received
 			tx_tail = (tx_tail < TX_BUFFER_SIZE ? tx_tail + 1 : 0);
-			action->done++;
-			if (action->done == action->len) {
+			action->processed++;
+			if (action->processed == action->len) {
 				if (action->callback != 0)
 					action->callback();
 				action->completed = true;
@@ -123,17 +123,17 @@ ISR (TWI_vect) {
 			break;
 
 		case 0x50: // data received, ack returned
-			action->dest[action->done] = TWDR;
-			action->done++;
-			if (action->done < action->len)
+			action->data[action->processed] = TWDR;
+			action->processed++;
+			if (action->processed < action->len)
 				TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT) | _BV(TWEA);
 			else
 				TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWINT);
 			break;
 
 		case 0x58: // byte received, nack sent, end of transmission
-			action->dest[action->done] = TWDR;
-			action->done++;
+			action->data[action->processed] = TWDR;
+			action->processed++;
 			if (action->callback != 0)
 				action->callback();
 			action->completed = true;
@@ -189,4 +189,20 @@ volatile i2c_txn_t * i2c_read_registers_cb(uint8_t address, uint8_t reg, uint8_t
 	uint8_t buf = reg;
 	i2c_write(address, &buf, 1);
 	return i2c_read_cb(address, value, len, cb);
+}
+
+void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit) {
+	volatile uint8_t buf;
+	volatile i2c_txn_t * txn = i2c_read_register(address, reg, &buf);
+	while (!txn->completed);
+	i2c_write_register(address, reg, *txn->data | (1 << bit));
+	while (!txn->completed);
+}
+
+void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit) {
+	volatile uint8_t buf;
+	volatile i2c_txn_t * txn = i2c_read_register(address, reg, &buf);
+	while (!txn->completed);
+	i2c_write_register(address, reg, *txn->data & ~(1 << bit));
+	while (!txn->completed);
 }
