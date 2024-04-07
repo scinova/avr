@@ -79,7 +79,7 @@ volatile i2c_txn_t * i2c_read_cb(uint8_t address, volatile uint8_t * data, uint8
 	return _i2c_read(address, data, len, cb);
 }
 
-void next_txn() {
+static void next_txn() {
 	txns_tail = (txns_tail < I2C_TXN_BUFFER_SIZE ? txns_tail + 1 : 0);
 	if (txns_head != txns_tail)
 		TWCR = _BV(TWEN) | _BV(TWSTA) | _BV(TWIE) | _BV(TWINT);
