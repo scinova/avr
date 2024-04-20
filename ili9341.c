@@ -1,16 +1,18 @@
 #include "ili9341.h"
-#include "spi.h"
-#include "util/delay.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include <avr/io.h>
+#include "gpio.h"
+#include "spi.h"
 
 #define BIT(x) (1<<x)
 
-#define SPIPORT PORTB
-#define SPIDDR DDRB
-#define CSPIN 2
-#define DCPIN 1
+#ifdef __AVR__
+#define CSPIN PinB2
+#define DCPIN PinB1
+#else
+#define CSPIN PA4
+#define DCPIN PA3
+#endif
 
 typedef enum {
 	NOP = 0x00,
@@ -20,7 +22,7 @@ typedef enum {
 	READ_DISPLAY_POWER_MODE = 0xa,
 	READ_MEMORY_ACCESS_CONTROL = 0x0b,
 	READ_DISPLAY_PIXEL_FORMAT = 0xc,
-	READ_DISPLAY_IMAGE_FORMAT = 0xd,
+	READ_DISPLAY_IMAGE_FORMAT = 0xc,
 	READ_SELF_DIAGNOSTIC = 0xF,
 	//
 	ENTER_SLEEP_MODE = 0x10,
@@ -114,42 +116,43 @@ typedef enum {
 //
 #define NL 0b00111111
 
-
-static void setcs(bool value) {
-	if (value)
-		SPIPORT |= BIT(CSPIN);
-	else
-		SPIPORT &= ~BIT(CSPIN);
+static void cslow() {
+  gpio_pin_clear(CSPIN);
 }
 
-static void setdc(bool value) {
-	if (value)
-		SPIPORT |= BIT(DCPIN);
-	else
-		SPIPORT &= ~BIT(DCPIN);
+static void cshigh() {
+  gpio_pin_set(CSPIN);
+}
+
+static void dclow() {
+  gpio_pin_clear(DCPIN);
+}
+
+static void dchigh() {
+  gpio_pin_set(DCPIN);
 }
 
 static void transmit_command(ili9341_command_t cmd) {
-	setdc(false);
-	setcs(false);
+	dclow();
+	cslow();
 	spi_transfer8(cmd);
-	setcs(true);
-	setdc(true);
+	cshigh();
+	dchigh();
 }
 
 static void transmit_data(uint8_t data) {
-	setdc(true);
-	setcs(false);
+	dchigh();
+	cslow();
 	spi_transfer8(data);
-	setcs(true);
+	cshigh();
 }
 
 static void transmit_data16(uint16_t data) {
-	setdc(true);
-	setcs(false);
+	dchigh();
+	cslow();
 	spi_transfer8((uint8_t)(data >> 8));
 	spi_transfer8(data );
-	setcs(true);
+	cshigh();
 }
 
 static void command(uint8_t cmd) {
@@ -183,10 +186,10 @@ static void command4(uint8_t cmd, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4
 }
 
 void ili9341_enable() {
-	SPIPORT |= BIT(CSPIN) | BIT(DCPIN); // d/c as output
-	SPIDDR |= BIT(CSPIN) | BIT(DCPIN);
+  gpio_pin_mode(CSPIN, Output);
+  gpio_pin_mode(DCPIN, Output);
 	command(SOFTWARE_RESET);
-	_delay_ms(50);
+	//_delay_ms(50);
 	command(DISPLAY_OFF);
 	command1(POWER_CONTROL1, 0x23); // 4.60v
 	command1(POWER_CONTROL2, 0x10); // ???
@@ -199,9 +202,9 @@ void ili9341_enable() {
 	command3(DISPLAY_FUNCTION_CONTROL, BIT(PTG1), BIT(REV) + 2, 0x27);
 	// TODO: set gamma
 	command(SLEEP_OUT);
-	_delay_ms(150);
+	//_delay_ms(150);
 	command(DISPLAY_ON);
-	_delay_ms(200);
+	//_delay_ms(200);
 }
 
 void ili9341_disable() {
@@ -209,7 +212,7 @@ void ili9341_disable() {
 	command(ENTER_SLEEP_MODE);
 }
 
-void ili9341_setpixel(uint16_t x, uint16_t y, uint16_t color) {
+void ili9341_set_pixel(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xh = x >> 8, xl = x & 0xff;
 	uint8_t yh = y >> 8, yl = y & 0xff;
 	uint8_t ch = (uint16_t)color >> 8, cl = (uint16_t)(color & 0xff);
