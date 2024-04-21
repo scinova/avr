@@ -16,7 +16,7 @@ typedef union {
 		uint8_t red;
 		uint8_t green;
 		uint8_t blue;
-	}
+	};
 } rgb888_t;
 
 #define RGB565(c) (((c.red >> 3) << 11) | ((c.green >> 2) << 5) | c.blue >> 3)

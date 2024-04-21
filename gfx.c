@@ -16,9 +16,10 @@ void gfx_set_pixel(uint16_t x, uint16_t y, rgb888_t color) {
 
 void gfx_print(uint16_t x_, uint16_t y_, uint8_t * data, uint8_t len, bool rtl, font_t * font, rgb888_t color) {
 	uint16_t xoff = 0;
+	rgb888_t color0 = (rgb888_t){.red = 0, .green = 0, .blue = 0};
 	rgb888_t color1 = (rgb888_t){.red = color.red * 0.8, .green = color.green * 0.8, .blue = color.blue * 0.8};
 	rgb888_t color2 = (rgb888_t){.red = color.red * 0.5, .green = color.green * 0.5, .blue = color.blue * 0.5};
-	rgb888_t colors[] = {(rgb888_t){0, 0, 0}, color2, color1, color};
+	rgb888_t colors[] = {color0, color2, color1, color};
 	for (int i = 0; i < len; i++) {
 		uint8_t size = font->size[i];
 		for (uint8_t x = 0; x < size; x++) {
