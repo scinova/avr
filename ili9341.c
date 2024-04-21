@@ -216,8 +216,8 @@ void ili9341_set_pixel(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xh = x >> 8, xl = x & 0xff;
 	uint8_t yh = y >> 8, yl = y & 0xff;
 	uint8_t ch = (uint16_t)color >> 8, cl = (uint16_t)(color & 0xff);
-	command4(COLUMN_ADDRESS_SET, xh, xl, xh, xl);
-	command4(PAGE_ADDRESS_SET, yh, yl, yh, yl);
+	command4(COLUMN_ADDRESS_SET, xh, xl, xh + 1, xl + 1);
+	command4(PAGE_ADDRESS_SET, yh, yl, yh + 1, yl + 1);
 	command(MEMORY_WRITE);
 	transmit_data(ch);
 	transmit_data(cl);

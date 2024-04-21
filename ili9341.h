@@ -1,6 +1,7 @@
 #ifndef _ili9341_h
 #define _ili9341_h
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

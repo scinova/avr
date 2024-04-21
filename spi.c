@@ -8,7 +8,7 @@
 
 void spi_enable() {
 	SPIDDR |= _BV(SCK) | _BV(MOSI);
-	SPCR = _BV(SPE) | _BV(MSTR); // clock/4
+	SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0); // clock/4
 }
 
 void spi_disable() {
