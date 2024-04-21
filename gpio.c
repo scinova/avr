@@ -3,8 +3,8 @@
 #include "gpio.h"
 
 void gpio_pin_mode(gpio_pin_t pin, gpio_pin_mode_t mode) {
-	volatile uint8_t * port = (volatile uint8_t *)(0x20 + (2 + 3 * (pin >> 8)));
-	volatile uint8_t * ddr = (volatile uint8_t *)(0x20 + (1 + 3 * (pin >> 8)));
+	volatile uint8_t * port = 0x20 + (2 + 3 * (pin >> 8));
+	volatile uint8_t * ddr = 0x20 + (1 + 3 * (pin >> 8));
   uint8_t pin_mask = pin & 0xff;
 	switch (mode) {
 		case Input:
@@ -21,13 +21,13 @@ void gpio_pin_mode(gpio_pin_t pin, gpio_pin_mode_t mode) {
 }
 
 void gpio_pin_set(gpio_pin_t pin) {
-	volatile uint8_t * port = (volatile uint8_t *)(0x20 + (2 + 3 * (pin >> 8)));
+	volatile uint8_t * port = 0x20 + (2 + 3 * (pin >> 8));
   uint8_t pin_mask = pin & 0xff;
   *port |= pin_mask;
 }
 
 void gpio_pin_clear(gpio_pin_t pin) {
-	volatile uint8_t * port = (volatile uint8_t *)(0x20 + (2 + 3 * (pin >> 8)));
+	volatile uint8_t * port = 0x20 + (2 + 3 * (pin >> 8));
   uint8_t pin_mask = pin & 0xff;
   *port &= ~pin_mask;
 }
