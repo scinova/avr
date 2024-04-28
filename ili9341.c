@@ -1,18 +1,13 @@
 #include "ili9341.h"
-#include <stdint.h>
-#include <stdbool.h>
 #include "gpio.h"
 #include "spi.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define BIT(x) (1<<x)
 
-#ifdef __AVR__
-#define CSPIN PinB2
-#define DCPIN PinB1
-#else
-#define CSPIN PA4
-#define DCPIN PA3
-#endif
+pin_t _cspin;
+pin_t _dcpin;
 
 typedef enum {
 	NOP = 0x00,
@@ -116,43 +111,26 @@ typedef enum {
 //
 #define NL 0b00111111
 
-static void cslow() {
-  gpio_pin_clear(CSPIN);
-}
-
-static void cshigh() {
-  gpio_pin_set(CSPIN);
-}
-
-static void dclow() {
-  gpio_pin_clear(DCPIN);
-}
-
-static void dchigh() {
-  gpio_pin_set(DCPIN);
-}
-
 static void transmit_command(ili9341_command_t cmd) {
-	dclow();
-	cslow();
+  pin_reset(_dcpin);
+  pin_reset(_cspin);
 	spi_transfer8(cmd);
-	cshigh();
-	dchigh();
+  pin_set(_cspin);
 }
 
 static void transmit_data(uint8_t data) {
-	dchigh();
-	cslow();
+  pin_set(_dcpin);
+  pin_reset(_cspin);
 	spi_transfer8(data);
-	cshigh();
+  pin_set(_cspin);
 }
 
 static void transmit_data16(uint16_t data) {
-	dchigh();
-	cslow();
+  pin_set(_dcpin);
+  pin_reset(_cspin);
 	spi_transfer8((uint8_t)(data >> 8));
 	spi_transfer8(data );
-	cshigh();
+  pin_set(_cspin);
 }
 
 static void command(uint8_t cmd) {
@@ -185,9 +163,11 @@ static void command4(uint8_t cmd, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4
 	transmit_data(p4);
 }
 
-void ili9341_enable() {
-  gpio_pin_mode(CSPIN, Output);
-  gpio_pin_mode(DCPIN, Output);
+void ili9341_enable(pin_t cspin, pin_t dcpin) {
+	_cspin = cspin;
+	_dcpin = dcpin;
+  pin_mode(_cspin, Output);
+  pin_mode(_dcpin, Output);
 	command(SOFTWARE_RESET);
 	//_delay_ms(50);
 	command(DISPLAY_OFF);
@@ -216,8 +196,8 @@ void ili9341_set_pixel(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xh = x >> 8, xl = x & 0xff;
 	uint8_t yh = y >> 8, yl = y & 0xff;
 	uint8_t ch = (uint16_t)color >> 8, cl = (uint16_t)(color & 0xff);
-	command4(COLUMN_ADDRESS_SET, xh, xl, xh + 1, xl + 1);
-	command4(PAGE_ADDRESS_SET, yh, yl, yh + 1, yl + 1);
+	command4(COLUMN_ADDRESS_SET, xh, xl, xh, xl);
+	command4(PAGE_ADDRESS_SET, yh, yl, yh, yl);
 	command(MEMORY_WRITE);
 	transmit_data(ch);
 	transmit_data(cl);

@@ -62,11 +62,10 @@ void uart_print(uint8_t * data) {
 }
 
 #if defined (__AVR_ATmega2560__)
-#define USART_UDRE_vect USART0_UDRE_vect
-#define USART_RX_vect USART0_RX_vect
-#endif
-
+ISR(USART0_UDRE_vect) {
+#else
 ISR(USART_UDRE_vect) {
+#endif
 	if (tx_buffer_head != tx_buffer_tail) {
 		uint8_t next = (tx_buffer_tail < UART_TX_BUFFER_SIZE ? tx_buffer_tail + 1 : 0);
 		UDR0 = tx_buffer[tx_buffer_tail];
@@ -89,7 +88,11 @@ uint8_t uart_read() {
 		return ch;
 }
 
+#if defined (__AVR_ATmega2560__)
+ISR(USART0_RX_vect) {
+#else
 ISR(USART_RX_vect) {
+#endif
 	uint8_t ch = UDR0;
 	uint8_t next = (rx_buffer_head < UART_RX_BUFFER_SIZE - 1 ? rx_buffer_head + 1 : 0);
 	if (next == rx_buffer_tail)

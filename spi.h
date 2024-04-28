@@ -1,6 +1,5 @@
 #ifndef _spi_h_
 #define _spi_h_
-
 #include <stdint.h>
 #include <stdbool.h>
 

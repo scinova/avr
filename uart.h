@@ -1,6 +1,5 @@
 #ifndef _uart_h
 #define _uart_h
-
 #include <stdint.h>
 #include <stdbool.h>
 

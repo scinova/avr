@@ -1,18 +1,17 @@
 #include <avr/io.h>
 #include "spi.h"
-
-#define SPIDDR DDRB
-#define SCK 5
-#define MISO 4
-#define MOSI 3
+#include "gpio.h"
 
 void spi_enable() {
-	SPIDDR |= _BV(SCK) | _BV(MOSI);
+	pin_mode(PinSCK, Output);
+	pin_mode(PinMOSI, Output);
 	SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0); // clock/4
 }
 
 void spi_disable() {
 	SPCR = 0;
+	pin_mode(PinSCK, Input);
+	pin_mode(PinMOSI, Input);
 }
 
 uint8_t spi_transfer8(uint8_t data) {
