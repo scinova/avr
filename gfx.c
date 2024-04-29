@@ -1,49 +1,62 @@
-#include <stdint.h>
-#include <stdbool.h>
+#include <avr/pgmspace.h>
 #include "gfx.h"
 #include "ili9341.h"
+#include <string.h>
 
-uint32_t font_data(font_t * font, uint8_t ch, uint8_t column) {
-	uint8_t offset = 0;
-	for (int i = 0; i < ch; i++)
-		offset += font->size[i];
-	return font->data[offset + column];
-}
-
-void gfx_set_pixel(uint16_t x, uint16_t y, rgb888_t color) {
-	ili9341_set_pixel(x, y, RGB565(color));
-}
-
-void gfx_print(uint16_t x_, uint16_t y_, uint8_t * data, uint8_t len, bool rtl, font_t * font, rgb888_t color) {
-	uint16_t xoff = 0;
-	rgb888_t color0 = (rgb888_t){.red = 0, .green = 0, .blue = 0};
-	rgb888_t color1 = (rgb888_t){.red = color.red * 0.8, .green = color.green * 0.8, .blue = color.blue * 0.8};
-	rgb888_t color2 = (rgb888_t){.red = color.red * 0.5, .green = color.green * 0.5, .blue = color.blue * 0.5};
-	rgb888_t colors[] = {color0, color2, color1, color};
-	for (int i = 0; i < len; i++) {
-		uint8_t size = font->size[i];
-		for (uint8_t x = 0; x < size; x++) {
-			uint8_t ch = *(data + i);
-			uint32_t d = font_data(font, ch - font->offset, (rtl ? size - x - 1 : x));
-			for (uint8_t y = 0; y < 16; y++) {
-				uint8_t px = (d >> (2 * y)) &0x3;
-				gfx_set_pixel((rtl ? x_ - xoff : x_ + xoff), y_ + y, colors[px]);
+void draw_text(uint16_t x, uint16_t y, const uint8_t * text, font_t * font, bool rtl) {
+	uint8_t bh = ((font->height - 1) / 8 + 1) * 2;
+	int16_t offset = 0;
+	for (int chx = 0; chx < strlen((char *)text); chx++) {
+		uint8_t chr = text[chx] - font->offset;
+		uint16_t char_offset = 0;
+		for (int i = 0; i < chr; i++)
+			char_offset += font->widths[i] * bh;
+		for (int cl = 0; cl < font->widths[chr]; cl++) {
+			uint8_t rcl = (rtl ? font->widths[chr] - cl - 1 : cl);
+			for (int b = 0; b < bh; b++) {
+				uint8_t val = pgm_read_byte_near(font->data + (char_offset + bh * rcl + b));
+				//uint8_t val = font->data[char_offset + bh * rcl + b];
+				for (int p = 0; p < 4; p++) {
+					uint8_t v = (val >> (2 * p)) & 0b11;
+					switch(v) {
+						case 0:
+							ili9341_set_pixel(x + offset, y + 4 * b + p, 0x0000);
+							break;
+						case 1:
+							ili9341_set_pixel(x + offset, y + 4 * b + p, 0x6800);
+							break;
+						case 2:
+							ili9341_set_pixel(x + offset, y + 4 * b + p, 0x7800);
+							break;
+						case 3:
+							ili9341_set_pixel(x + offset, y + 4 * b + p, 0xF800);
+							break;
+					}
+				}
 			}
-			xoff += 1;
-		} 
+			if (rtl)
+				offset--;
+			else
+				offset++;
+		}
 	}
 }
 
-void gfx_draw_text_box(uint16_t x_, uint16_t y_, uint16_t w, uint16_t h, uint8_t * data, uint8_t len, bool rtl, font_t * font, rgb888_t color) {
-	uint16_t text_size = 0;
-	for (int i = 0; i < len; i++)
-		text_size += font->size[i];
-	uint16_t pad = ((w - text_size) / 2); // center
-	gfx_print((rtl ? w - pad : x_ + pad), y_, data, len, rtl, font, color);
+uint16_t text_width(uint8_t * text, font_t * font) {
+	uint16_t width = 0;
+	for (int c = 0; c < strlen((char *)text); c++)
+		width += font->widths[text[c] - font->offset];
+	return width;
 }
 
-void gfx_draw_box(uint16_t x_, uint16_t y_, uint16_t w, uint16_t h, rgb888_t color) {
-	for (int y = y_; y < y_ + h; y++)
-		for (int x = x_; x < x_ + w; x++)
-			gfx_set_pixel(x, y, color);
+void draw_text_box(uint16_t x, uint16_t y, uint16_t width, uint16_t h, uint8_t * text, font_t * font, align_t align, bool rtl) {
+	uint16_t pad = 0;
+	if (align == AlignRight)
+		pad = width - text_width(text, font);
+	else if (align == AlignCenter)
+		pad = (width - text_width(text, font)) / 2;
+	if (rtl)
+		draw_text(width - x - pad, y, text, font, rtl);
+	else
+		draw_text(x + pad, y, text, font, rtl);
 }
