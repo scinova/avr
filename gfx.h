@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 typedef struct __attribute__ ((__packed__)) {
+	const bool smooth;
 	const uint8_t height;
 	const uint8_t offset;
 	const uint8_t num_chars;
