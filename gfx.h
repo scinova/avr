@@ -1,7 +1,9 @@
+
 #ifndef _gfx_h_
 #define _gfx_h_
 #include <stdint.h>
 #include <stdbool.h>
+#include <avr/pgmspace.h>
 
 typedef struct __attribute__ ((__packed__)) {
 	const bool smooth;
@@ -55,6 +57,7 @@ extern "C" {
 uint16_t text_width(uint8_t * text, font_t * font);
 void draw_text(uint16_t x, uint16_t y, const uint8_t * text, font_t * font, rgb888_t color, rgb888_t bgcolor, bool rtl);
 void draw_text_box(uint16_t x, uint16_t y, uint16_t width, uint16_t h, uint8_t * text, font_t * font, rgb888_t color, rgb888_t bgcolor, align_t align, bool rtl);
+void draw_rectangle(uint16_t x_, uint16_t y_, uint16_t w, uint16_t h, rgb888_t color);
 #ifdef __cplusplus
 }
 #endif

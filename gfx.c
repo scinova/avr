@@ -8,7 +8,7 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 void draw_text(uint16_t x, uint16_t y, const uint8_t * text, font_t * font, rgb888_t color, rgb888_t bgcolor, bool rtl) {
-	uint8_t bh = ((font->height - 1) / 8 + 1) * 2;
+	uint8_t bh = ((font->height * (font->smooth * 2) - 1) / 8 + 1);
 	int16_t offset = 0;
 	for (int chx = 0; chx < strlen((const char *)text); chx++) {
 		uint8_t chr = text[chx] - font->offset;
@@ -58,14 +58,23 @@ uint16_t text_width(uint8_t * text, font_t * font) {
 	return width;
 }
 
-void draw_text_box(uint16_t x, uint16_t y, uint16_t width, uint16_t h, uint8_t * text, font_t * font, rgb888_t color, rgb888_t bgcolor, align_t align, bool rtl) {
-	uint16_t pad = 0;
-	if (align == AlignRight)
-		pad = width - text_width(text, font);
-	else if (align == AlignCenter)
-		pad = (width - text_width(text, font)) / 2;
-	if (rtl)
-		draw_text(width - x - pad, y, text, font, color, bgcolor, rtl);
-	else
-		draw_text(x + pad, y, text, font, color, bgcolor, rtl);
+void draw_rectangle(uint16_t x_, uint16_t y_, uint16_t w, uint16_t h, rgb888_t color) {
+	for (int y = y_; y < y_ + h; y++)
+		for (int x = x_; x < x_ + w; x++)
+			ili9341_set_pixel(x, y, RGB565(color));
 }
+
+void draw_text_box(uint16_t x, uint16_t y, uint16_t width, uint16_t h, uint8_t * text, font_t * font, rgb888_t color, rgb888_t bgcolor, align_t align, bool rtl) {
+	draw_rectangle((rtl ? x: width - 1 - x), y, width, h, bgcolor);	
+	uint16_t pad = 0;
+	uint16_t tw = text_width(text, font);
+	if (align == AlignRight)
+		pad = width - tw;
+	else if (align == AlignCenter)
+		pad = (width - tw) / 2;
+		if (rtl)
+		draw_text(x + pad + tw, y, text, font, color, bgcolor, rtl);
+	else
+			draw_text(x + pad, y, text, font, color, bgcolor, rtl);
+}
+
