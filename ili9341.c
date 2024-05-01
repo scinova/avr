@@ -187,6 +187,23 @@ void ili9341_enable(pin_t cspin, pin_t dcpin) {
 	//_delay_ms(200);
 }
 
+void ili9341_set_rotation(int rotation) {
+	switch (rotation) {
+		case 0:
+				command1(MEMORY_ACCESS_CONTROL, BIT(MX) | BIT(BGR));
+				break;
+		case 1:
+				command1(MEMORY_ACCESS_CONTROL, BIT(MX) | BIT(MY) | BIT(MV) | BIT(BGR));
+				break;
+		case 2:
+				command1(MEMORY_ACCESS_CONTROL, BIT(MY) | BIT(BGR));
+				break;
+		case 3:
+				command1(MEMORY_ACCESS_CONTROL, BIT(MV) | BIT(BGR));
+				break;
+	}
+}
+
 void ili9341_disable() {
 	command(DISPLAY_OFF);
 	command(ENTER_SLEEP_MODE);
