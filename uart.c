@@ -14,8 +14,8 @@ void _uart_enable(uint32_t bitrate, bool enable_rx) {
 	// SEL0=0 UPM0=0 USBS0=0 UCSZ0=3 async, no parity, 1 stop bit, 8 bit size
 	UCSR0C |= _BV(UCSZ00) | _BV(UCSZ01);
 	uint32_t b = (F_CPU / (bitrate * 16UL)) - 1;
-	UBRR0L = b;
-	UBRR0H = b >> 8;
+	UBRR0L = (uint8_t)(b & 0xff);
+	UBRR0H = (uint8_t)(b >> 8);
 	if (enable_rx)
 		UCSR0B |= _BV(RXEN0) | _BV(RXCIE0);
 	sei();
@@ -46,14 +46,15 @@ bool uart_tx_buffer_is_empty() {
 }
 
 void uart_write(uint8_t * data, uint8_t len) {
+	cli();
 	bool empty = (tx_buffer_head == tx_buffer_tail);
 	for (int i = 0; i < len; i++) {
-		uint8_t next = (tx_buffer_head < UART_TX_BUFFER_SIZE ? tx_buffer_head + 1 : 0);
 		tx_buffer[tx_buffer_head] = data[i];
-		tx_buffer_head = next;
+		tx_buffer_head = (tx_buffer_head < UART_TX_BUFFER_SIZE ? tx_buffer_head + 1 : 0);
 	}
 	if (empty)
 		UCSR0B |= _BV(TXEN0) | _BV(UDRIE0);
+	sei();
 }
 
 void uart_print(uint8_t * data) {

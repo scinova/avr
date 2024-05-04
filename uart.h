@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #if !defined(UART_TX_BUFFER_SIZE)
-#define UART_TX_BUFFER_SIZE 500
+#define UART_TX_BUFFER_SIZE 50
 #endif
 
 typedef void(*uart_handler_t)(uint8_t ch);
