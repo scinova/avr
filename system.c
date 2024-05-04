@@ -9,14 +9,11 @@ ISR(TIMER0_OVF_vect) {
 	_microseconds += 1024;
 }
 
-uint64_t system_us() {
-	cli();
-	uint64_t v = _microseconds;
-	sei();
-	return v;
+inline uint64_t system_us() {
+	return _microseconds;
 }
 
-uint32_t system_ms() {
+inline uint32_t system_ms() {
 	return system_us() / 1000;
 }
 
