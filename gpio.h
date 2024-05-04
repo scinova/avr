@@ -44,6 +44,7 @@ typedef enum {
 	PinD7 = 0x37,
 	PinSCK = PinB5,
 	PinMOSI = PinB4,
+	PinMISO = PinB3,
 	PinSS = PinB2,
 	P0 = PinD0,
 	P1 = PinD1,
