@@ -111,83 +111,83 @@ typedef enum {
 //
 #define NL 0b00111111
 
-static void transmit_command(ili9341_command_t cmd) {
+
+static void chip_select() {
+	pin_reset(_cspin);
+}
+
+static void chip_deselect() {
+	pin_set(_cspin);
+}
+
+/*static void transmit_command(ili9341_command_t cmd) {
   pin_reset(_dcpin);
-  pin_reset(_cspin);
+//  pin_reset(_cspin);
 	spi_transfer8(cmd);
-  pin_set(_cspin);
+//  pin_set(_cspin);
 }
 
 static void transmit_data(uint8_t data) {
   pin_set(_dcpin);
-  pin_reset(_cspin);
+//  pin_reset(_cspin);
 	spi_transfer8(data);
-  pin_set(_cspin);
+//  pin_set(_cspin);
 }
 
 static void transmit_data16(uint16_t data) {
   pin_set(_dcpin);
-  pin_reset(_cspin);
+//  pin_reset(_cspin);
 	spi_transfer8((uint8_t)(data >> 8));
 	spi_transfer8(data );
-  pin_set(_cspin);
-}
+//  pin_set(_cspin);
+}*/
 
 static void command(uint8_t cmd) {
-	transmit_command(cmd);
+	pin_reset(_dcpin);
+	spi_transfer8(cmd);
+}
+
+static void write_data(uint8_t data) {
+	pin_set(_dcpin);
+	spi_transfer8(data);
 }
 
 static void command1(uint8_t cmd, uint8_t p1) {
-	transmit_command(cmd);
-	transmit_data(p1);
+	pin_reset(_dcpin);
+	spi_transfer8(cmd);
+	pin_set(_dcpin);
+	spi_transfer8(p1);
 }
 
 static void command2(uint8_t cmd, uint8_t p1, uint8_t p2) {
-	transmit_command(cmd);
-	transmit_data(p1);
-	transmit_data(p2);
+	pin_reset(_dcpin);
+	spi_transfer8(cmd);
+	pin_set(_dcpin);
+	spi_transfer8(p1);
+	spi_transfer8(p2);
 }
 
 static void command3(uint8_t cmd, uint8_t p1, uint8_t p2, uint8_t p3) {
-	transmit_command(cmd);
-	transmit_data(p1);
-	transmit_data(p2);
-	transmit_data(p3);
+	pin_reset(_dcpin);
+	spi_transfer8(cmd);
+	pin_set(_dcpin);
+	spi_transfer8(p1);
+	spi_transfer8(p2);
+	spi_transfer8(p3);
 }
 
 static void command4(uint8_t cmd, uint8_t p1, uint8_t p2, uint8_t p3, uint8_t p4) {
-	transmit_command(cmd);
-	transmit_data(p1);
-	transmit_data(p2);
-	transmit_data(p3);
-	transmit_data(p4);
-}
-
-void ili9341_enable(pin_t cspin, pin_t dcpin) {
-	_cspin = cspin;
-	_dcpin = dcpin;
-  pin_mode(_cspin, Output);
-  pin_mode(_dcpin, Output);
-	command(SOFTWARE_RESET);
-	//_delay_ms(50);
-	command(DISPLAY_OFF);
-	command1(POWER_CONTROL1, 0x23); // 4.60v
-	command1(POWER_CONTROL2, 0x10); // ???
-	command2(VCOM_CONTROL1, 0x2B, 0x2B); // 3.775V
-	command1(VCOM_CONTROL2, 0xC0); // no offset voltage
-	command1(MEMORY_ACCESS_CONTROL, BIT(MX) | BIT(BGR));
-	command2(VERTICAL_SCROLLING_START_ADDRESS, 0, 0);
-	command1(PIXEL_FORMAT_SET, 0x55); // 16bit/px
-	command2(FRAME_RATE_CONTROL, 0, 0x1B);
-	command3(DISPLAY_FUNCTION_CONTROL, BIT(PTG1), BIT(REV) + 2, 0x27);
-	// TODO: set gamma
-	command(SLEEP_OUT);
-	//_delay_ms(150);
-	command(DISPLAY_ON);
-	//_delay_ms(200);
+	pin_reset(_dcpin);
+	spi_transfer8(cmd);
+	pin_set(_dcpin);
+	spi_transfer8(p1);
+	spi_transfer8(p2);
+	spi_transfer8(p3);
+	spi_transfer8(p4);
 }
 
 void ili9341_set_rotation(int rotation) {
+	chip_select();
 	switch (rotation) {
 		case 0:
 				command1(MEMORY_ACCESS_CONTROL, BIT(MX) | BIT(BGR));
@@ -202,20 +202,88 @@ void ili9341_set_rotation(int rotation) {
 				command1(MEMORY_ACCESS_CONTROL, BIT(MV) | BIT(BGR));
 				break;
 	}
+	chip_deselect();
+}
+
+void ili9341_enable(pin_t cspin, pin_t dcpin) {
+	_cspin = cspin;
+	_dcpin = dcpin;
+  pin_mode(_cspin, Output);
+  pin_mode(_dcpin, Output);
+	chip_select();
+	command(SOFTWARE_RESET);
+	//_delay_ms(50);
+	command(DISPLAY_OFF);
+	command1(POWER_CONTROL1, 0x23); // 4.60v
+	command1(POWER_CONTROL2, 0x10); // ???
+	command2(VCOM_CONTROL1, 0x2B, 0x2B); // 3.775V
+	command1(VCOM_CONTROL2, 0xC0); // no offset voltage
+	//command1(MEMORY_ACCESS_CONTROL, BIT(MX) | BIT(BGR));
+	command2(VERTICAL_SCROLLING_START_ADDRESS, 0, 0);
+	command1(PIXEL_FORMAT_SET, 0x55); // 16bit/px
+	command2(FRAME_RATE_CONTROL, 0, 0x1B);
+	command3(DISPLAY_FUNCTION_CONTROL, BIT(PTG1), BIT(REV) + 2, 0x27);
+	// TODO: set gamma
+	command(SLEEP_OUT);
+	//_delay_ms(150);
+	command(DISPLAY_ON);
+	//_delay_ms(200);
+	ili9341_set_rotation(1);
+	chip_deselect();
 }
 
 void ili9341_disable() {
+	chip_select();
 	command(DISPLAY_OFF);
 	command(ENTER_SLEEP_MODE);
+	chip_deselect();
 }
+
+void ili9341_set_window(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+	uint8_t xh = x >> 8, xl = x & 0xff;
+	uint8_t yh = y >> 8, yl = y & 0xff;
+	chip_select();
+	command4(COLUMN_ADDRESS_SET, xh, xl, xh, xl);
+	command4(PAGE_ADDRESS_SET, yh, yl, yh, yl);
+	chip_deselect();
+}
+
 
 void ili9341_set_pixel(uint16_t x, uint16_t y, uint16_t color) {
 	uint8_t xh = x >> 8, xl = x & 0xff;
 	uint8_t yh = y >> 8, yl = y & 0xff;
 	uint8_t ch = (uint16_t)color >> 8, cl = (uint16_t)(color & 0xff);
+	chip_select();
 	command4(COLUMN_ADDRESS_SET, xh, xl, xh, xl);
 	command4(PAGE_ADDRESS_SET, yh, yl, yh, yl);
 	command(MEMORY_WRITE);
-	transmit_data(ch);
-	transmit_data(cl);
+	write_data(ch);
+	write_data(cl);
+	chip_deselect();
+}
+
+void ili9341_write_block(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t * data) {
+	uint16_t x2 = x + w - 1;
+	uint16_t y2 = y + h - 1;
+	chip_select();
+	command4(COLUMN_ADDRESS_SET, x >> 8, x & 0xFF, x2 >> 8, x2 & 0xFF);
+	command4(PAGE_ADDRESS_SET, y >> 8, y & 0xFF, y2 >> 8, y2 & 0xFF);
+	command(MEMORY_WRITE);
+	for (int i = 0; i < w * h * 2; i++)
+		write_data(data[i]);
+	chip_deselect();
+}
+
+void ili9341_set_block(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color) {
+	uint16_t x2 = x + w - 1;
+	uint16_t y2 = y + h - 1;
+	chip_select();
+	command4(COLUMN_ADDRESS_SET, x >> 8, x & 0xFF, x2 >> 8, x2 & 0xFF);
+	command4(PAGE_ADDRESS_SET, y >> 8, y & 0xFF, y2 >> 8, y2 & 0xFF);
+	command(MEMORY_WRITE);
+	for (int i = 0; i < w * h; i++) {
+		write_data(color >> 8);
+		write_data(color &0xFF);
+	}
+	chip_deselect();
 }
