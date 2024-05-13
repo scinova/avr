@@ -2,16 +2,20 @@
 #include "spi.h"
 #include "gpio.h"
 
+#define SCK PinB5
+#define MISO PinB4
+#define MOSI PinB3
+
 void spi_enable() {
-	pin_mode(PinSCK, Output);
-	pin_mode(PinMOSI, Output);
+	pin_mode(SCK, Output);
+	pin_mode(MOSI, Output);
 	SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0); // clock/4
 }
 
 void spi_disable() {
 	SPCR = 0;
-	pin_mode(PinSCK, Input);
-	pin_mode(PinMOSI, Input);
+	pin_mode(SCK, Input);
+	pin_mode(MOSI, Input);
 }
 
 uint8_t spi_transfer8(uint8_t data) {

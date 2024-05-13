@@ -9,17 +9,21 @@ ISR(TIMER0_OVF_vect) {
 	_microseconds += 1024;
 }
 
-inline uint64_t system_us() {
-	return _microseconds;
+uint64_t system_us() {
+	volatile uint8_t sreg = SREG;
+	cli();
+	uint64_t v = _microseconds;
+	SREG = sreg;
+	return v;
 }
 
-inline uint32_t system_ms() {
+uint32_t system_ms() {
 	return system_us() / 1000;
 }
 
 void delay_ms(uint32_t ms) {
-	uint32_t start = system_ms();
-	while (system_ms() - start < ms);
+	uint32_t until = system_ms() + ms;
+	while (system_ms() < until);
 }
 
 void system_init(void) {

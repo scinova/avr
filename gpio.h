@@ -1,12 +1,27 @@
 #ifndef _gpio_h
 #define _gpio_h
+#include <stdint.h>
 #include <stdbool.h>
 
+typedef volatile struct {
+	uint8_t PIN;
+	uint8_t DDR;
+	uint8_t PORT;
+} gpio_t;
+
+#define GPIO(x) ((gpio_t *)(0x20 + 3	* x))
+
 typedef enum {
-	PortA = 1,
-	PortB,
-	PortC,
-	PortD,
+	Input,
+	InputPullup,
+	Output,
+} pin_mode_t;
+
+typedef enum {
+	PortA = 0,
+	PortB = 1,
+	PortC = 2,
+	PortD = 3,
 } port_t;
 
 typedef enum {
@@ -42,49 +57,37 @@ typedef enum {
 	PinD5 = 0x35,
 	PinD6 = 0x36,
 	PinD7 = 0x37,
-	PinSCK = PinB5,
-	PinMOSI = PinB4,
-	PinMISO = PinB3,
-	PinSS = PinB2,
-	P0 = PinD0,
-	P1 = PinD1,
-	P2 = PinD2,
-	P3 = PinD3,
-	P4 = PinD4,
-	P5 = PinD5,
-	P6 = PinD6,
-	P7 = PinD7,
-	P8 = PinB0,
-	P9 = PinB1,
-	P10 = PinB2,
-	P11 = PinB3,
-	P12 = PinB4,
-	P13 = PinB5,
-	A0 = PinC0,
-	A1 = PinC1,
-	A2 = PinC2,
-	A3 = PinC3,
-	A4 = PinC4,
-	A5 = PinC5,
- } pin_t;
+} pin_t;
 
-typedef enum {
-	Input,
-	InputPullup,
-	Output,
-} pin_mode_t;
-
-#define pin_port(pin) ((port_t) (pin >> 4))
-#define pin_number(pin) (pin & 0xF)
-#define pin_mask(pin) ((uint8_t)(1 << pin_number(pin)))
+//#define pin_port(pin) ((port_t) (pin >> 4))
+//#define pin_number(pin) (pin & 0x0F)
+//#define pin_mask(pin) ((uint8_t)(1 << pin_number(pin)))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+inline port_t pin_port(pin_t pin) {
+	return pin >> 4;
+}
+
+inline uint8_t pin_number(pin_t pin) {
+	return pin & 0x0F;
+}
+
+inline uint8_t pin_mask(pin_t pin) {
+	return 1 << pin_number(pin);
+}
+
 void pin_mode(pin_t pin, pin_mode_t mode);
 void pin_set(pin_t pin);
 void pin_reset(pin_t pin);
-inline void pin_write(pin_t pin, bool value) {(value ? pin_set(pin) : pin_reset(pin));};
+void pin_write(pin_t pin, bool value);
+bool pin_read(pin_t pin);
+void port_mode(port_t port, pin_mode_t mode);
+void port_write_byte(port_t port, uint8_t value);
+uint8_t port_read_byte(port_t port);
+
 #ifdef __cplusplus
 }
 #endif
