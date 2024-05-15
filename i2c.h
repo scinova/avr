@@ -26,6 +26,7 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 void i2c_enable(uint32_t bitrate);
 bool i2c_is_ready();
 
@@ -46,6 +47,7 @@ void i2c_clear_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 bool i2c_read_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 void i2c_set_register_bit(uint8_t address, uint8_t reg, uint8_t bit);
 void i2c_set_register_bits(uint8_t address, uint8_t reg, uint8_t bits, uint8_t mask);
+
 #ifdef __cplusplus
 }
 #endif

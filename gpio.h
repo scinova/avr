@@ -1,5 +1,6 @@
 #ifndef _gpio_h
 #define _gpio_h
+
 #include <stdint.h>
 #include <stdbool.h>
 

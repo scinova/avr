@@ -1,5 +1,5 @@
-#ifndef adc_h
-#define adc_h
+#ifndef _adc_h
+#define _adc_h
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -39,6 +39,7 @@ void adc_disable();
 
 void adc_convert(uint8_t channel, uint16_t * valueptr);
 void adc_convert_cb(uint8_t channel, uint16_t * valueptr, callback_t callback);
+
 #ifdef __cplusplus
 }
 #endif
