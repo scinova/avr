@@ -68,7 +68,7 @@ extern "C" {
 #endif
 
 inline port_t pin_port(pin_t pin) {
-	return pin >> 4;
+	return (port_t)(pin >> 4);
 }
 
 inline uint8_t pin_number(pin_t pin) {
