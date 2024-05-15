@@ -30,7 +30,11 @@ void system_init(void) {
 	sei();
 	TCCR0A |= _BV(WGM00) | _BV(WGM01);
 	TCCR0B |= _BV(CS00) | _BV(CS01); //clk/64
+#if defined (TIMSK0)
 	TIMSK0 |= _BV(TOIE0);
+#else
+	TIMSK |= _BV(TOIE0);
+#endif
 }
 
 int main() {
