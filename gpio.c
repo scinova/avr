@@ -7,9 +7,9 @@ void pin_mode(pin_t pin, pin_mode_t mode) {
 	switch (mode) {
 		case Input:
 			gpio->DDR &= pin_mask(pin);
-			gpio->PORT &= pin_mask(pin);
+			gpio->PORT &= ~pin_mask(pin);
 			break;
-		case InputPullup:
+		case InputPullUp:
 			gpio->DDR &= ~pin_mask(pin);
 			gpio->PORT |= pin_mask(pin);
 			break;
@@ -27,7 +27,7 @@ void port_mode(port_t port, pin_mode_t mode) {
 			gpio->DDR = 0x00;
 			gpio->PORT = 0x00;
 			break;
-		case InputPullup:
+		case InputPullUp:
 			gpio->DDR = 0x00;
 			gpio->PORT = 0xFF;
 			break;

@@ -10,11 +10,16 @@ typedef volatile struct {
 	uint8_t PORT;
 } gpio_t;
 
-#define GPIO(x) ((gpio_t *)(0x20 + 3	* x))
+#if defined (__AVR_ATtiny85__)
+#define GPIOBASE 0x13
+#else
+#define GPIOBASE 0x00
+#endif
+#define GPIO(x) ((gpio_t *)(0x20 + GPIOBASE + 3 * x))
 
 typedef enum {
 	Input,
-	InputPullup,
+	InputPullUp,
 	Output,
 } pin_mode_t;
 
