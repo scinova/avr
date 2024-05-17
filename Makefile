@@ -47,7 +47,7 @@ $(BUILDDIR)/$(NAME).hex: $(BUILDDIR)/$(NAME).elf
 	avr-size --mcu=$(DEVICE) -C --format=avr $(BUILDDIR)/$(NAME).elf
 	$(OBJDUMP) -h -D -S $(BUILDDIR)/$(NAME).elf > $(BUILDDIR)/$(NAME).lst
 	$(OBJCOPY) -j .text -j .data -O ihex $(BUILDDIR)/$(NAME).elf $(BUILDDIR)/$(NAME).hex
-	cp $(BUILDDIR)/$(NAME).hex /sdcard/ArduinoDroid/precompiled
+#	cp $(BUILDDIR)/$(NAME).hex /sdcard/ArduinoDroid/precompiled
 
 clean:
 	@if [ -d $(BUILDDIR) ]; then rm -r $(BUILDDIR); fi
