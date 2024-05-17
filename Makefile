@@ -12,12 +12,13 @@ LD=avr-ld
 
 CFLAGS = -fdata-sections -ffunction-sections
 CFLAGS += -g -Os -DF_CPU=$(F_CPU) -mmcu=$(DEVICE)
+CFLAGS += -I. -Idrivers
 CFLAGS += -Wall -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
 CFLAGS += -D I2C_TXN_BUFFER_SIZE=10 -D I2C_TX_BUFFER_SIZE=20
 LDFLAGS = -Wl,--gc-sections -lc
 
 BUILDDIR=build
-C_FILES = $(wildcard *.c)
+C_FILES = $(wildcard *.c drivers/*.c)
 CPP_FILES = $(wildcard *.cpp)
 ASM_FILES = $(wildcard *.S)
 C_OBJS = $(addprefix $(BUILDDIR)/,$(patsubst %.c,%.c.o,$(C_FILES)))
@@ -28,7 +29,7 @@ ALL_OBJS = $(ASM_OBJS) $(C_OBJS) $(CPP_OBJS)
 all: dir $(BUILDDIR)/$(NAME).hex
 
 dir:
-	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR)/drivers
 
 $(BUILDDIR)/%.c.o: %.c
 	$(CC) -std=c99 $(CFLAGS) -c -o $@ $<
