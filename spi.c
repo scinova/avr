@@ -4,29 +4,29 @@
 void spi_enable() {
 	pin_mode(SPI_SCK, Output);
 	pin_mode(SPI_MOSI, Output);
-	SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0); // clock/4
+	SPI->CR = SPI_CR_SPE | SPI_CR_MSTR | SPI_CR_SPR_DIV4;
 }
 
 void spi_disable() {
-	SPCR = 0;
+	SPI->CR = 0;
 	pin_mode(SPI_SCK, Input);
 	pin_mode(SPI_MOSI, Input);
 }
 
 uint8_t spi_transfer8(uint8_t data) {
-	SPDR = data;
-	while (!(SPSR & _BV(SPIF)));
-	return SPDR;
+	SPI->DR = data;
+	while (!(SPI->SR & SPI_SR_SPIF));
+	return SPI->DR;
 }
 
 void spi_transfer(uint8_t * data, uint8_t len) {
 	uint8_t *p = data;
-	SPDR = *p;
+	SPI->DR = *p;
 	while (--len > 0) {
 		uint8_t out = *(p + 1);
-		while (!(SPSR & _BV(SPIF)));
-		uint8_t in = SPDR;
-		SPDR = out;
+		while (!(SPI->SR & SPI_SR_SPIF));
+		uint8_t in = SPI->DR;
+		SPI->DR = out;
 		*p++ = in;
 	}
 }
